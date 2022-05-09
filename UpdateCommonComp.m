@@ -95,16 +95,16 @@ dataTable(n,9) = updatedModel.ub(findRxnIDs(updatedModel,convertStringsToChars(d
 
 else
 
-   updatedModel = addReaction(updatedModel, ...
-       convertStringsToChars(dataTable(n,4)),...  % Change all EX reactions to be met <=> met[i] and add [i] met 
-            'metaboliteList', {convertStringsToChars(dataTable(n,1)),convertStringsToChars("h[i]"), convertStringsToChars(dataTable(n,3))},...
-                 'stoichCoeffList', [ -1 ; -1 ; 1], 'lowerBound',-1000, 'upperBound', 1000, "subSystem", {'Transport'});
-
-
-
-dataTable(n,7) = printRxnFormula(updatedModel, convertStringsToChars(dataTable(n,4)));
-dataTable(n,8) = updatedModel.lb(findRxnIDs(updatedModel,convertStringsToChars(dataTable(n,4))));
-dataTable(n,9) = updatedModel.ub(findRxnIDs(updatedModel,convertStringsToChars(dataTable(n,4)))); 
+%    updatedModel = addReaction(updatedModel, ...
+%        convertStringsToChars(dataTable(n,4)),...  % Change all EX reactions to be met <=> met[i] and add [i] met 
+%             'metaboliteList', {convertStringsToChars(dataTable(n,1)),convertStringsToChars("h[i]"), convertStringsToChars(dataTable(n,3))},...
+%                  'stoichCoeffList', [ -1 ; -1 ; 1], 'lowerBound',-1000, 'upperBound', 1000, "subSystem", {'Transport'});
+% 
+% 
+% 
+% dataTable(n,7) = printRxnFormula(updatedModel, convertStringsToChars(dataTable(n,4)));
+% dataTable(n,8) = updatedModel.lb(findRxnIDs(updatedModel,convertStringsToChars(dataTable(n,4))));
+% dataTable(n,9) = updatedModel.ub(findRxnIDs(updatedModel,convertStringsToChars(dataTable(n,4)))); 
 
 end
 

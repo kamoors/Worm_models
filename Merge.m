@@ -175,7 +175,12 @@ noMatch_gapseq_EX(:,2) = gapseq_test.ub(IDs_charge_noMatch_gapseq);
 
 
 Merged_Model = MergeModelsOnEX(updatedModel_iCEL, updatedModel_gapseq);
-Merged_Model.comps = {Merged_Model.comps{1:3} "COMMON" "e0" "c0" "p0"}';
+Merged_Model.comps = {Merged_Model.comps{1:3} "i" "e0" "c0" "p0"}';
+Merged_Model.compNames = {Merged_Model.compNames{1:3} "interaction" "bacterial extracellular space" "bacterial cytosol" "bacterial periplasmic space"}';
+
+Merged_Model.description = char("Merged model iCEL1314 and gapseq");
+Merged_Model.modelName = char(strcat(iCEL_SBML_model.modelName,"_",gapseq_model.modelID));
+Merged_Model.modelID = char(strcat(iCEL_SBML_model.modelName,"_",gapseq_model.modelID));
 
 dataTables = struct();
 
