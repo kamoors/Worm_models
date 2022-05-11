@@ -20,7 +20,7 @@ function [results] = CheckFutileCycles(merged_model,iCEL_model,gapseq_model)
 
 % gapseq energetics
 
-%% "rxn00062" ATP maintenance requirement
+% "rxn00062" ATP maintenance requirement
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 results = table();

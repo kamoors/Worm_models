@@ -31,13 +31,11 @@ iCEL_test = iCEL_SBML_model;
 
 gapseq_test = gapseq_model;
 
-% Load information table obtained through matching iCEL1314 and gapseq exchange metabolites (in RStudio)
+%%231 Load information table obtained through matching iCEL1314 and gapseq exchange metabolites (in RStudio)
 Matching_EX_table = readtable(matching_EX_sheet);
 
-
-%% Find metabolites where the charges match (and don't match) between the two models 
-
-
+% Find metabolites where the charges match (and
+% don't match) between the two models 
 
 ind = table2array(Matching_EX_table(:, 6)) == table2array(Matching_EX_table(:, "iCEL_mets_charge"));
 
@@ -47,64 +45,6 @@ charge_Nomatch = Matching_EX_table(ind == 0,:);
 charge_match.Properties.VariableNames = {'gapseq_rxns' 'gapseq_rxnNames' 'gapseq_mets' 'gapseq_metFormula' 'gapseq_metNames' 'gapseq_metCharges' 'gapseq_metKEGGID' 'gapseq_metBiGGID' 'combined_match' 'matching_KEGG' 'iCEL_mets_formula' 'iCEL_mets_KEGG' 'iCEL_mets_name' 'iCEL_mets_charge' 'iCEL_EX_rxn' 'iCEL_EX_rxn_names'};
 charge_Nomatch.Properties.VariableNames = {'gapseq_rxns' 'gapseq_rxnNames' 'gapseq_mets' 'gapseq_metFormula' 'gapseq_metNames' 'gapseq_metCharges' 'gapseq_metKEGGID' 'gapseq_metBiGGID' 'combined_match' 'matching_KEGG' 'iCEL_mets_formula' 'iCEL_mets_KEGG' 'iCEL_mets_name' 'iCEL_mets_charge' 'iCEL_EX_rxn' 'iCEL_EX_rxn_names'};
 
-
-%% Rename Exchange reactions of the iCEL1314 model and prepare further steps
-iCEL_test = iCEL_SBML_model;
-% Find Exchange reactions
-iCEL_Exchange = iCEL_test.rxns(findExcRxns(iCEL_test, 0));
-EX_ind = findRxnIDs(iCEL_test, iCEL_Exchange);
-
-
-
-
-% Exclude common EX that have differing charge;
-charge_Nomatch_ind = findRxnIDs(iCEL_test, table2array(charge_Nomatch(:,"iCEL_EX_rxn")));
-c = setdiff(EX_ind, charge_Nomatch_ind);
-
-% Determine original constraints 
-iCEL_lb = iCEL_test.lb(EX_ind);
-iCEL_ub = iCEL_test.ub(EX_ind);
-
-% Find associated metabolites
-[iCEL_EX_mets,~] = findMetsFromRxns(iCEL_test, iCEL_Exchange);
-iCEL_EX_mets = iCEL_EX_mets(:,1);
-
-% Determine metabolite without compartment 
-erased_comp = erase(string(iCEL_EX_mets), "[e]");
-erased_comp = erase(string(erased_comp), "[c]");
-erased_comp = erase(string(erased_comp), "[m]");
-
-
-% Create conversion table for later use
-iCEL_ct = array2table(iCEL_Exchange);
-iCEL_ct(:,2) = iCEL_EX_mets;
-iCEL_ct(:,3) = cellstr(append(erased_comp,"[i]"));
-iCEL_ct(:,4) = cellstr(erased_comp);
-iCEL_ct(:,5) = cellstr(append("EX_", erased_comp));
-iCEL_ct(:,6) = cellstr(append("IEX_", erased_comp));
-
-iCEL_ct.Properties.VariableNames = {'OLD_EX_names' 'OG_mets' 'COMMON_mets' 'mets_noComp' 'NEW_EX_names' 'COMMON_EX'};
-
-% Rename all Exchange reactions to the form "IEX_metabolite"
-iCEL_test.rxns(EX_ind) = table2array(iCEL_ct(:,5));
-iCEL_Exchange = iCEL_test.rxns(findExcRxns(iCEL_test, 0));
-
-
-%% Update Common Compartment with iCEL_reactions
-
-[updatedModel, dataTable] = UpdateCommonCompAllMets(iCEL_test,iCEL_ct, '[i]', 1, iCEL_lb, iCEL_ub)
-
-
-%% Match new EX names to old names to reuse sheet from R
-
-
-
-
-
-
-
-
-%%
 
 % Change charges to charges_noMatch mets
 % Create all the variables and the conversion table to account for all necessary entries to deal with metabolites whose charges do no match between iCEL1314 and gapseq models
@@ -135,11 +75,54 @@ conversion_table.Properties.VariableNames = {'iCEL_mets_KEGG' 'new_met_IDs' 'new
 conversion_table = table2array(conversion_table);
 
 
+%% Rename Exchange reactions of the iCEL1314 model and prepare further steps
+iCEL_test = iCEL_SBML_model;
+% Find Exchange reactions
+iCEL_Exchange = iCEL_test.rxns(findExcRxns(iCEL_test, 0));
+EX_ind = findRxnIDs(iCEL_test, iCEL_Exchange);
 
 
-%% Update Common Compartment with mets that differ in charge
-%%
-% Find the original bounds for the Exchange reactions
+
+
+% Exclude common EX that have differing charge;
+charge_Nomatch_ind = findRxnIDs(iCEL_test, conversion_table(:,11));
+c = setdiff(EX_ind, charge_Nomatch_ind);
+
+% Determine original constraints 
+iCEL_lb = iCEL_test.lb(EX_ind);
+iCEL_ub = iCEL_test.ub(EX_ind);
+
+% Find associated metabolites
+[iCEL_EX_mets,~] = findMetsFromRxns(iCEL_test, iCEL_Exchange);
+iCEL_EX_mets = iCEL_EX_mets(:,1);
+
+% Determine metabolite without compartment 
+erased_comp = erase(string(iCEL_EX_mets), "[e]");
+erased_comp = erase(string(erased_comp), "[c]");
+erased_comp = erase(string(erased_comp), "[m]");
+
+
+% Create conversion table for later use
+iCEL_ct = iCEL_Exchange;
+iCEL_ct(:,2) = iCEL_EX_mets;
+iCEL_ct(:,3) = cellstr(append(erased_comp,"[i]"));
+iCEL_ct(:,4) = cellstr(erased_comp);
+iCEL_ct(:,5) = cellstr(append("EX_", erased_comp));
+iCEL_ct(:,6) = cellstr(append("IEX_", erased_comp));
+iCEL_ct = array2table(iCEL_ct);
+iCEL_ct.Properties.VariableNames = {'OLD_EX_names' 'OG_mets' 'COMMON_mets' 'mets_noComp' 'NEW_EX_names' 'COMMON_EX'};
+
+% Rename all Exchange reactions to the form "IEX_metabolite"
+iCEL_test.rxns(EX_ind) = table2array(iCEL_ct(:,5));
+iCEL_Exchange = iCEL_test.rxns(findExcRxns(iCEL_test, 0));
+
+
+%% Update Common Compartment with iCEL_reactions
+
+[updatedModel, dataTable] = UpdateCommonCompAllMets(iCEL_test,iCEL_ct, '[i]', 1, iCEL_lb, iCEL_ub)
+
+
+%% Find the original bounds for the Exchange reactions
 IDs_charge_match = findRxnIDs(iCEL_test, table2array(charge_match(:,"iCEL_EX_rxn")));
 
 
