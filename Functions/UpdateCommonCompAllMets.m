@@ -1,4 +1,4 @@
-function [updatedModel, dataTable] = UpdateCommonCompAllMets(model,iCEL_conversionTable, newCompartmentName, add_COMMON_EX, lb, ub, fix_h)
+function [updatedModel, dataTable] = UpdateCommonCompAllMets(model,CT, newCompartmentName, add_COMMON_EX, lb, ub)
 %UpdateCommonComp 
 % Function to update the exchange metabolite reactions to create
 % COMMON metabolites or update exchange reactions to transport external
@@ -12,13 +12,12 @@ function [updatedModel, dataTable] = UpdateCommonCompAllMets(model,iCEL_conversi
 
 arguments
  model;
- iCEL_conversionTable
+ CT
  newCompartmentName = '[i]';
  add_COMMON_EX  = 0  ;
  lb = -1000;
  ub = 1000;
 
- fix_h = 0; 
 end
 
 
@@ -31,14 +30,14 @@ updatedModel = model;
 
 %% Modify all Exchange reactions to be met <=> met[i]
 
-dataTable = iCEL_conversionTable(:, "NEW_EX_names");
-for n = 1:height(iCEL_conversionTable)
+dataTable = CT(:, "NEW_IEX_names");
+for n = 1:height(CT)
 
     updatedModel = addReaction(updatedModel, ...
-        char(table2array(iCEL_conversionTable(n,5))) ...
+        char(table2array(CT(n,5))) ...
         ,...
-        'metaboliteList', {char(table2array(iCEL_conversionTable(n,2))),char(table2array(iCEL_conversionTable(n,3)))},...
-        'stoichCoeffList', [ -1 ; 1], ...
+        'metaboliteList', {char(table2array(CT(n,2))),char(table2array(CT(n,3)))},...
+        'stoichCoeffList', [-1 ; 1], ...
         'lowerBound',-1000, ...
         'upperBound', 1000, ...
         "subSystem", {'Transport'});
@@ -46,8 +45,8 @@ for n = 1:height(iCEL_conversionTable)
 
 
     dataTable(n,2) = printRxnFormula(updatedModel, table2array(dataTable(n,1)));
-    dataTable(n,3) = array2table(updatedModel.lb(findRxnIDs(updatedModel,table2array(dataTable(n,1)))));
-    dataTable(n,4) = array2table(updatedModel.ub(findRxnIDs(updatedModel,table2array(dataTable(n,1)))));
+    dataTable(n,3) = array2table(updatedModel.lb(int64(findRxnIDs(updatedModel,table2array(dataTable(n,1))))));
+    dataTable(n,4) = array2table(updatedModel.ub(int64(findRxnIDs(updatedModel,table2array(dataTable(n,1))))));
 
 
 
@@ -60,27 +59,27 @@ for n = 1:height(iCEL_conversionTable)
     if add_COMMON_EX == 1
 
         updatedModel = addReaction(updatedModel, ...
-            char(table2array(iCEL_conversionTable(n,"COMMON_EX"))),...
-            'metaboliteList', {char(table2array(iCEL_conversionTable(n,"COMMON_mets")))},...
+            char(table2array(CT(n,"NEW_EX_names"))),...
+            'metaboliteList', {char(table2array(CT(n,"COMMON_mets")))},...
             'stoichCoeffList', -1, ...
             'lowerBound', lb(n,1), ...
             'upperBound', ub(n,1), ...
             "subSystem", {'Exchange with the environment'});
 
-        dataTable(n,5) = printRxnFormula(updatedModel, table2array(iCEL_conversionTable(n,"COMMON_EX")));
+        dataTable(n,5) = printRxnFormula(updatedModel, table2array(CT(n,"NEW_EX_names")));
 
-        dataTable(n,6) = array2table(updatedModel.lb(findRxnIDs(updatedModel,table2array(iCEL_conversionTable(n,6)))));
-        dataTable(n,7) = array2table(updatedModel.ub(findRxnIDs(updatedModel,table2array(iCEL_conversionTable(n,6)))));
+        dataTable(n,6) = array2table(updatedModel.lb(findRxnIDs(updatedModel,table2array(CT(n,6)))));
+        dataTable(n,7) = array2table(updatedModel.ub(findRxnIDs(updatedModel,table2array(CT(n,6)))));
 
 
     end
 end
 
 if add_COMMON_EX == 0
-    dataTable.Properties.VariableNames = {'NEW_EX_name' 'NEW_EX_rxnFormula' 'NEW_EX_lb' 'NEW_EX_ub'};
+    dataTable.Properties.VariableNames = {'NEW_IEX_name' 'NEW_IEX_rxnFormula' 'NEW_IEX_lb' 'NEW_IEX_ub'};
 end
 if add_COMMON_EX == 1
-    dataTable.Properties.VariableNames = {'NEW_EX_name' 'NEW_EX_rxnFormula' 'NEW_EX_lb' 'NEW_EX_ub' 'IEX_rxnFormula' 'IEX_lb' 'IEX_ub'};
+    dataTable.Properties.VariableNames = {'NEW_IEX_name' 'NEW_IEX_rxnFormula' 'NEW_IEX_lb' 'NEW_IEX_ub' 'EX_rxnFormula' 'EX_lb' 'EX_ub'};
 end
 
 
